@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 public class S3EventProcessorCreateThumbnail implements RequestHandler<S3Event, String> {
 
 	private static final float MAX_WIDTH = 120;
-	private static final float MAX_HEIGHT = 120;
+	private static final float MAX_HEIGHT = 240;
 
 	private final String JPG_TYPE = (String) "jpg";
 	private final String JPG_MIME = (String) "image/jpeg";
@@ -42,15 +42,18 @@ public class S3EventProcessorCreateThumbnail implements RequestHandler<S3Event, 
 			String srcKey = record.getS3().getObject().getKey().replace('+', ' ');
 			srcKey = URLDecoder.decode(srcKey, "UTF-8");
 
-			String dstBucket = srcBucket + "resized";
-			String dstKey = "resized-" + srcKey;
+			//String dstBucket = srcBucket + "resized";
+			//String dstKey = "resized-" + srcKey;
+			String dstKey =  srcKey.replace("original/","thumbnail/");
 
 			// Sanity check: validate that source and destination are different
 			// buckets.
+			/*
 			if (srcBucket.equals(dstBucket)) {
 				System.out.println("Destination bucket must not match source bucket.");
 				return "";
 			}
+			*/
 
 			// Infer the image type.
 			Matcher matcher = Pattern.compile(".*\\.([^\\.]*)").matcher(srcKey);
@@ -106,9 +109,9 @@ public class S3EventProcessorCreateThumbnail implements RequestHandler<S3Event, 
 			}
 
 			// Uploading to S3 destination bucket
-			System.out.println("Writing to: " + dstBucket + "/" + dstKey);
-			s3Client.putObject(dstBucket, dstKey, is, meta);
-			System.out.println("Successfully resized " + srcBucket + "/" + srcKey + " and uploaded to " + dstBucket + "/" + dstKey);
+			System.out.println("Writing to: " + srcBucket + "/" + dstKey);
+			s3Client.putObject(srcBucket, dstKey, is, meta);
+			System.out.println("Successfully resized " + srcBucket + "/" + srcKey + " and uploaded to " + srcBucket + "/" + dstKey);
 			return "Ok";
 		} catch (IOException e) {
 			throw new RuntimeException(e);
