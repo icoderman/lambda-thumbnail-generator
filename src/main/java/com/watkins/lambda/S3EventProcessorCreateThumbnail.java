@@ -9,12 +9,9 @@ import com.amazonaws.services.s3.event.S3EventNotification.S3EventNotificationRe
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
+import net.coobird.thumbnailator.Thumbnails;
 
-import javax.imageio.ImageIO;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.Transparency;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,8 +23,8 @@ import java.util.regex.Pattern;
 
 public class S3EventProcessorCreateThumbnail implements RequestHandler<S3Event, String> {
 
-	private static final float MAX_WIDTH = 120;
-	private static final float MAX_HEIGHT = 240;
+	private static final int MAX_WIDTH = 120;
+	private static final int MAX_HEIGHT = 240;
 
 	private final String JPG_TYPE = (String) "jpg";
 	private final String JPG_MIME = (String) "image/jpeg";
@@ -73,6 +70,9 @@ public class S3EventProcessorCreateThumbnail implements RequestHandler<S3Event, 
 			S3Object s3Object = s3Client.getObject(new GetObjectRequest(srcBucket, srcKey));
 			InputStream objectData = s3Object.getObjectContent();
 
+			ByteArrayOutputStream os = new ByteArrayOutputStream();
+			Thumbnails.of(objectData).size(MAX_WIDTH, MAX_HEIGHT).toOutputStream(os);
+/*
 			// Read the source image
 			BufferedImage srcImage = ImageIO.read(objectData);
 			int srcHeight = srcImage.getHeight();
@@ -91,6 +91,8 @@ public class S3EventProcessorCreateThumbnail implements RequestHandler<S3Event, 
 			ImageIO.write(resizedImage, imageType, os);
 			InputStream is = new ByteArrayInputStream(os.toByteArray());
 			// Set Content-Length and Content-Type
+*/
+			InputStream is = new ByteArrayInputStream(os.toByteArray());
 			ObjectMetadata meta = new ObjectMetadata();
 			meta.setContentLength(os.size());
 			if (JPG_TYPE.equals(imageType)) {
